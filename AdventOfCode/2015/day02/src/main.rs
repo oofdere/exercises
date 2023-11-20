@@ -13,6 +13,17 @@ impl Present {
 
         slack + 2 * (a + b + c)
     }
+
+    fn ribbon(&self) -> i32 {
+        let a = self.0 + self.1;
+        let b = self.1 + self.2;
+        let c = self.2 + self.0;
+
+        let min = min(min(a, b), c) * 2;
+        let vol = self.0 * self.1 * self.2;
+
+        min + vol
+    }
 }
 
 impl FromStr for Present {
@@ -30,13 +41,15 @@ fn main() {
 
     let contents = fs::read_to_string(&args[1]).expect("failed to read file");
 
-    let paper: i32 = contents
+    let paper: (i32, i32) = contents
         .lines()
         .map(|x| Present::from_str(x).unwrap())
         .inspect(|x| println!("{:?}", x))
-        .map(|x| x.area())
+        .map(|x| (x.area(), x.ribbon()))
         .inspect(|x| println!("{:?}", x))
-        .sum();
+        .reduce(|acc, e| (acc.0 + e.0, acc.1 + e.1))
+        .unwrap();
 
-    println!("The elves need {} square feet of paper!", paper);
+    println!("The elves need {} square feet of paper!", paper.0);
+    println!("The elves need {} feet of ribbon!", paper.1);
 }
