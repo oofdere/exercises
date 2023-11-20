@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::{cmp::Ordering, env, fs};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -12,8 +12,21 @@ fn main() {
             ')' => -1,
             _ => 0,
         })
-        .reduce(|acc, e| acc + e)
-        .unwrap();
+        .enumerate()
+        .fold((None, 0), |acc, (i, e)| {
+            let floor = acc.1 + e;
+            println!("{i} {:?}", acc);
+            if acc.0 == None && floor < 0 {
+                (Some(i + 1), floor)
+            } else {
+                (acc.0, floor)
+            }
+        });
 
-    println!("The star is on floor {floor}!")
+    println!("The star is on floor {}!", floor.1);
+
+    match floor.0 {
+        Some(n) => println!("Santa first enters the basement in move {n}"),
+        None => println!("Santa does not enter the basement."),
+    }
 }
