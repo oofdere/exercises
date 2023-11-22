@@ -23,12 +23,20 @@ fn main() {
     let contents = fs::read_to_string(&args[1]).expect("failed to read file");
 
     let mut map: HashMap<Point, i32> = HashMap::new();
-    let mut pos = Point(0, 0);
+    let mut santa = Point(0, 0);
+    let mut roboSanta = Point(0, 0);
 
-    map.insert(pos, 1);
+    map.insert(santa, 2);
     contents
         .chars()
-        .map(|x| pos.make_move(x))
+        .enumerate()
+        .map(|(i, c)| {
+            if i % 2 == 0 {
+                santa.make_move(c)
+            } else {
+                roboSanta.make_move(c)
+            }
+        })
         .inspect(|x| println!("{:?}", x))
         .for_each(|x| {
             map.entry(x).and_modify(|x| *x += 1).or_insert(1);
