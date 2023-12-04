@@ -14,7 +14,7 @@ fn main() {
     let res = lines.map(|x| x.split(": ").last().unwrap());
 
     // split into two things
-    let res: Vec<Vec<i32>> = res
+    let res = res
         .map(|x| x.split(" | ").collect::<Vec<&str>>())
         .map(|x| {
             x.into_iter()
@@ -34,7 +34,6 @@ fn main() {
         .inspect(|x| println!("1 {x:?}"))
         .map(|x| {
             let mut win: Vec<i32> = vec![];
-
             for i in &x[0] {
                 for j in &x[1] {
                     if i == j {
@@ -42,50 +41,25 @@ fn main() {
                     }
                 }
             }
-
-            win
-        })
-        .collect::<Vec<Vec<i32>>>();
-
-    // contains all the wins from the cards
-    let counts: Vec<usize> = res
-        .iter()
-        .map(|x| x.len())
-        .inspect(|x| println!("2 {:?}", x))
-        .collect::<Vec<usize>>();
-
-    let scores = counts
-        .iter()
-        .map(|x| {
-            if *x == 0 {
-                return *x;
-            };
-            let mut mul = 1;
-
-            for _ in 1..*x {
-                mul *= 2;
-            }
-
-            mul
+            win.len()
         })
         .collect::<Vec<usize>>();
-    println!("counts: {:?}", counts);
-    println!("scores: {:?}", scores);
 
-    // disgusting
-    let counts = [counts, vec![0; 100]].concat();
+    println!("{:?}", res);
 
-    let res: usize = counts
-        .iter()
-        .enumerate()
-        .map(|(idx, w)| {
-            let winnas = &scores[idx..idx + w];
+    let mut a = vec![0; res.len() + 100];
 
-            dbg!(winnas);
+    for (idx, c) in res.iter().enumerate().rev() {
+        // for each card, add the value in idx[a]
+        a[idx] += 1;
+        for i in idx + 1..idx + c + 1 {
+            println!("loop!{i}");
+            a[idx] += a[i]
+        }
+        println!("({idx}, {c}), {:?}", &a[..res.len()]);
+    }
 
-            winnas.iter().sum::<usize>()
-        })
-        .sum();
+    let a: usize = a.iter().sum::<usize>();
 
-    dbg!(res);
+    dbg!(a);
 }
