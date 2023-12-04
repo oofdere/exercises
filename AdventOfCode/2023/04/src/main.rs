@@ -47,13 +47,14 @@ fn main() {
         })
         .collect::<Vec<Vec<i32>>>();
 
-    let res: Vec<usize> = res
+    // contains all the wins from the cards
+    let counts: Vec<usize> = res
         .iter()
         .map(|x| x.len())
         .inspect(|x| println!("2 {:?}", x))
         .collect::<Vec<usize>>();
 
-    let res = res
+    let scores = counts
         .iter()
         .map(|x| {
             if *x == 0 {
@@ -67,39 +68,24 @@ fn main() {
 
             mul
         })
-        .sum::<usize>();
+        .collect::<Vec<usize>>();
+    println!("counts: {:?}", counts);
+    println!("scores: {:?}", scores);
 
-    println!("win: {:?}", res);
-}
+    // disgusting
+    let counts = [counts, vec![0; 100]].concat();
 
-fn extract_num(v: &mut Vec<char>, idx: usize) -> String {
-    let mut num: String = String::from("");
+    let res: usize = counts
+        .iter()
+        .enumerate()
+        .map(|(idx, w)| {
+            let winnas = &scores[idx..idx + w];
 
-    let start = v[..idx].iter_mut().rev().map_while(|c| {
-        if c.is_numeric() {
-            let d = *c;
-            *c = '.';
-            return Some(d);
-        }
-        None
-    });
+            dbg!(winnas);
 
-    for c in start {
-        num.insert(0, c)
-    }
+            winnas.iter().sum::<usize>()
+        })
+        .sum();
 
-    let end = &mut v[idx..].iter_mut().map_while(|c| {
-        if c.is_numeric() {
-            let d = *c;
-            *c = '.';
-            return Some(d);
-        }
-        None
-    });
-
-    for c in end {
-        num.push(c)
-    }
-
-    return num;
+    dbg!(res);
 }
