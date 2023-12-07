@@ -17,14 +17,14 @@ fn main() {
                     'A' => 14,
                     'K' => 13,
                     'Q' => 12,
-                    'J' => 11,
+                    'J' => 1,
                     'T' => 10,
                     x => x.to_digit(10).unwrap() as usize,
                 });
             }
             (h, bid.parse::<usize>().unwrap())
         })
-        .map(|(hand, bid)| (HandToRank(&hand), hand, bid))
+        .map(|(hand, bid)| (HandToRankJoker(&hand), hand, bid))
         .collect::<Vec<(usize, Vec<usize>, usize)>>();
 
     println!("{:?}", res);
@@ -58,6 +58,32 @@ fn main() {
     ()
 }
 
+fn HandToRankJoker(hand: &Vec<usize>) -> usize {
+    let mut points: Vec<usize> = vec![]; // all possible points
+
+    for i in 0..=14 {
+        let temp = hand
+            .iter()
+            .map(|x| {
+                if *x == 1 {
+                    return i;
+                }
+                *x
+            })
+            .collect::<Vec<usize>>();
+
+        println!("{:?}", temp);
+
+        points.push(HandToRank(&temp));
+    }
+
+    points.sort();
+
+    println!("points {:?}", points);
+
+    *points.last().unwrap()
+}
+
 fn HandToRank(hand: &Vec<usize>) -> usize {
     // map for freq information
     let mut map: HashMap<usize, usize> = HashMap::new();
@@ -69,6 +95,8 @@ fn HandToRank(hand: &Vec<usize>) -> usize {
 
     let mut freq: Vec<usize> = map.iter().map(|(_, x)| *x).collect::<Vec<usize>>();
     freq.sort();
+
+    println!("{:?}", freq);
 
     match freq.last().unwrap() {
         5 => 7, // five of a kind = 7
