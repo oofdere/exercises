@@ -29,55 +29,41 @@ fn main() {
 
     println!("{:?}", res);
 
-    let mut steps: usize = 0;
-    let mut positions: Vec<&str> = res
+    let steps: usize = 0;
+    let positions: Vec<usize> = res
         .iter()
         .map(|x| *x.0)
         .filter(|x| x.chars().last().unwrap() == 'A')
+        .map(|x| {
+            let mut steps = 0;
+            let mut x = x;
+            let mut inst = inst.clone().chars().cycle();
+
+            while true {
+                let i = inst.next().unwrap();
+
+                let tup = res.get(x).unwrap();
+                println!("{steps} {x} {tup:?}");
+                let ne = match i {
+                    'L' => tup.0,
+                    'R' => tup.1,
+                    _ => {
+                        panic!("impossible!")
+                    }
+                };
+                println!("{steps} {x} {ne:?}");
+                steps += 1;
+                x = ne;
+                if x.chars().nth(2).unwrap() == 'Z' {
+                    break;
+                }
+            }
+
+            steps
+        })
         .collect();
 
     println!("{:?}", positions);
-
-    let inst = inst
-        .chars()
-        .enumerate()
-        .collect::<Vec<(usize, char)>>()
-        .into_par_iter()
-        .cycle();
-
-    for i in inst {
-        let over = &positions.clone().iter().fold(true, |acc, e| {
-            if e.chars().nth(2).unwrap() != 'Z' {
-                return false;
-            }
-            acc
-        });
-
-        if *over {
-            break;
-        }
-
-        let mut tmp: Vec<&str> = vec![];
-        for pos in &positions {
-            let tup = res.get(pos).unwrap();
-            //println!("{steps} {pos} {i} {tup:?}");
-
-            let ne = match i {
-                'L' => tup.0,
-                'R' => tup.1,
-                _ => {
-                    panic!("impossible!")
-                }
-            };
-            //println!("{steps} {pos} {i} {ne:?}");
-            tmp.push(ne);
-        }
-
-        steps += 1;
-        positions = tmp;
-    }
-
-    println!("{:?}", steps);
 
     ()
 }
