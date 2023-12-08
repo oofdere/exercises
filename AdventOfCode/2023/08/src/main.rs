@@ -1,12 +1,9 @@
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
-use std::{
-    cell::UnsafeCell,
-    cmp::Ordering,
-    collections::{BTreeMap, HashMap},
-    env, fs,
-};
+use fnv::FnvHashMap;
+use rayon::prelude::*;
+use std::{env, fs};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -28,7 +25,7 @@ fn main() {
 
             (idx, tup.clone())
         })
-        .collect::<BTreeMap<&str, (&str, &str)>>();
+        .collect::<FnvHashMap<&str, (&str, &str)>>();
 
     println!("{:?}", res);
 
@@ -41,7 +38,12 @@ fn main() {
 
     println!("{:?}", positions);
 
-    let inst = inst.chars().cycle();
+    let inst = inst
+        .chars()
+        .enumerate()
+        .collect::<Vec<(usize, char)>>()
+        .into_par_iter()
+        .cycle();
 
     for i in inst {
         let over = &positions.clone().iter().fold(true, |acc, e| {
@@ -75,7 +77,7 @@ fn main() {
         positions = tmp;
     }
 
-    //println!("{:?}", steps);
+    println!("{:?}", steps);
 
     ()
 }
