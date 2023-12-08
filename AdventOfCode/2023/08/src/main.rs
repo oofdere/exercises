@@ -1,4 +1,12 @@
-use std::{cell::UnsafeCell, cmp::Ordering, collections::HashMap, env, fs};
+#[global_allocator]
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
+use std::{
+    cell::UnsafeCell,
+    cmp::Ordering,
+    collections::{BTreeMap, HashMap},
+    env, fs,
+};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -20,37 +28,54 @@ fn main() {
 
             (idx, tup.clone())
         })
-        .collect::<HashMap<&str, (&str, &str)>>();
+        .collect::<BTreeMap<&str, (&str, &str)>>();
 
     println!("{:?}", res);
 
-    let mut steps = 0;
-    let mut pos = "AAA";
+    let mut steps: usize = 0;
+    let mut positions: Vec<&str> = res
+        .iter()
+        .map(|x| *x.0)
+        .filter(|x| x.chars().last().unwrap() == 'A')
+        .collect();
+
+    println!("{:?}", positions);
 
     let inst = inst.chars().cycle();
 
     for i in inst {
-        let tup = res.get(pos).unwrap();
-        println!("{steps} {pos} {tup:?}");
-
-        let ne = match i {
-            'L' => tup.0,
-            'R' => tup.1,
-            _ => {
-                panic!("impossible!")
+        let over = &positions.clone().iter().fold(true, |acc, e| {
+            if e.chars().nth(2).unwrap() != 'Z' {
+                return false;
             }
-        };
-        println!("{steps} {pos} {ne:?}");
+            acc
+        });
 
-        steps += 1;
-        pos = ne;
-
-        if pos == "ZZZ" {
+        if *over {
             break;
         }
+
+        let mut tmp: Vec<&str> = vec![];
+        for pos in &positions {
+            let tup = res.get(pos).unwrap();
+            //println!("{steps} {pos} {i} {tup:?}");
+
+            let ne = match i {
+                'L' => tup.0,
+                'R' => tup.1,
+                _ => {
+                    panic!("impossible!")
+                }
+            };
+            //println!("{steps} {pos} {i} {ne:?}");
+            tmp.push(ne);
+        }
+
+        steps += 1;
+        positions = tmp;
     }
 
-    println!("{:?}", steps);
+    //println!("{:?}", steps);
 
     ()
 }
