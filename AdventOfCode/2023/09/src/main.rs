@@ -32,14 +32,17 @@ fn main() {
                     .map(|y| y[1] - y[0])
                     .collect::<Vec<i64>>();
 
-                sum = w.iter().sum();
+                sum = w.iter().sum::<i64>() + vec.last().unwrap().iter().sum::<i64>();
 
                 vec.push(w);
             }
 
             println!("{vec:?}");
 
-            let vec = vec.iter().map(|x| *x.last().unwrap()).collect::<Vec<i64>>();
+            let vec = vec
+                .iter()
+                .map(|x| *x.first().unwrap())
+                .collect::<Vec<i64>>();
 
             vec
         })
@@ -54,8 +57,8 @@ fn main() {
             seq.iter()
                 .rev()
                 .map(|x| {
-                    let y = prev + x;
-                    println!("{prev} + {x} = {y}");
+                    let y = x - prev;
+                    println!("{x} - {prev} = {y}");
                     prev = y;
                     y
                 })
