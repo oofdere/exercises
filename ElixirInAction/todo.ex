@@ -59,58 +59,95 @@ defmodule TodoList.CsvImporter do
 end
 
 defmodule TodoServer do
-  def start(list \\ TodoList.new()) do
-    spawn(fn -> loop(list) end)
+  def init() do
+    TodoList.new()
   end
 
-  defp loop(list) do
-    upd =
-      receive do
-        msg -> op(list, msg)
-      end
-
-    loop(upd)
+  def start() do
+    ServerProcess.start(TodoServer)
   end
 
-  defp op(list, {:add_entry, entry}) do
+  def handle_cast({:add_entry, entry}, list) do
     TodoList.add_entry(list, entry)
   end
 
-  defp op(list, {:delete_entry, id}) do
+  def handle_cast({:delete_entry, id}, list) do
     TodoList.delete_entry(list, id)
   end
 
-  defp op(list, {:update_entry, id, fun}) do
+  def handle_cast({:update_entry, id, fun}, list) do
     TodoList.update_entry(list, id, fun)
   end
 
-  defp op(list, {:entries, date, caller}) do
-    send(caller, TodoList.entries(list, date))
-    list
-  end
-
-  defp op(list, _) do
-    IO.puts("Invalid operation.")
-    list
+  def handle_call({:entries, date}, list) do
+    {TodoList.entries(list, date), list}
   end
 
   def add_entry(pid, entry) do
-    send(pid, {:add_entry, entry})
+    ServerProcess.cast(pid, {:add_entry, entry})
   end
 
   def delete_entry(pid, id) do
-    send(pid, {:delete_entry, id})
+    ServerProcess.cast(pid, {:delete_entry, id})
   end
 
   def update_entry(pid, id, fun) do
-    send(pid, {:add_entry, id, fun})
+    ServerProcess.cast(pid, {:add_entry, id, fun})
   end
 
   def entries(pid, date) do
-    send(pid, {:entries, date, self()})
+    ServerProcess.call(pid, {:entries, date})
+  end
+end
+
+defmodule ServerProcess do
+  def start(callback_module) do
+    spawn(fn ->
+      initial_state = callback_module.init()
+      loop(callback_module, initial_state)
+    end)
+  end
+
+  def loop(callback_module, current_state) do
+    receive do
+      {:call, request, caller} ->
+        IO.puts("handling call")
+
+        {response, new_state} =
+          callback_module.handle_call(
+            request,
+            current_state
+          )
+
+        send(caller, {:response, response})
+
+        loop(callback_module, new_state)
+
+      {:cast, request} ->
+        IO.puts("handling cast")
+
+        new_state =
+          callback_module.handle_cast(
+            request,
+            current_state
+          )
+
+        IO.inspect(new_state)
+
+        loop(callback_module, new_state)
+    end
+  end
+
+  def call(server_pid, request) do
+    send(server_pid, {:call, request, self()})
 
     receive do
-      m -> m
+      {:response, response} ->
+        response
     end
+  end
+
+  def cast(server_pid, request) do
+    send(server_pid, {:cast, request})
   end
 end
