@@ -2,8 +2,8 @@ defmodule Todo.DatabaseWorker do
   use GenServer
 
   # just a wrapper for initializing a worker
-  def start(path) do
-    GenServer.start(__MODULE__, path)
+  def start_link(path) do
+    GenServer.start_link(__MODULE__, path)
   end
 
   # GenServer calls this when starting up, passing in the second argument of GenServer.start
@@ -60,8 +60,8 @@ defmodule Todo.Database do
 
   @db_folder "./persist"
 
-  def start do
-    GenServer.start(__MODULE__, nil, name: __MODULE__)
+  def start_link do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def store(key, data) do
@@ -73,6 +73,7 @@ defmodule Todo.Database do
   end
 
   def init(_) do
+    IO.puts("starting to-do database")
     File.mkdir_p!(@db_folder)
     # start workers, put them in a map with number keys 0..2
     workers = %{
@@ -85,7 +86,7 @@ defmodule Todo.Database do
   end
 
   defp spawn do
-    {:ok, pid} = DatabaseWorker.start(@db_folder)
+    {:ok, pid} = DatabaseWorker.start_link(@db_folder)
     pid
   end
 
